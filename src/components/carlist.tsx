@@ -5,6 +5,8 @@ import Button from '@mui/material/Button';
 import SnackBar from '@mui/material/Snackbar';
 import AddCar from "./AddCar";
 import { Car } from '../types';
+import EditCar from "./EditCar";
+import { getCars, deleteCar } from '../carapi'
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -22,7 +24,12 @@ export default function CarList() {
         { field: "modelYear", filter: true, width: 120 },
         { field: "price", filter: true, width: 120 },
         {
-            width: 110,
+            width:120,
+            cellRenderer: (params: ICellRendererParams) => 
+            <EditCar data={params.data} fetchCars = {fetchCars} />
+        },
+        {
+            width: 120,
             cellRenderer: (params: ICellRendererParams) =>
 
                 <Button size="small" color="error" onClick={() => handleDelete(params)}>
@@ -33,13 +40,7 @@ export default function CarList() {
 
 
     const fetchCars = () => {
-        fetch(import.meta.env.VITE_API_URL)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Error when fetching cars");
-                }
-                return response.json();
-            })
+        getCars()
             .then((data) => {
 
                 setCars(data._embedded?.cars || []);
@@ -49,16 +50,8 @@ export default function CarList() {
 
     const handleDelete = (params: ICellRendererParams) => {
         if (window.confirm("Are you sure")) {
-            fetch(params.data._links.car.href, {
-                method: "DELETE"
-            })
-                .then(Response => {
-                    if (!Response.ok)
-                        throw new Error("Error when deleting car");
+           deleteCar(params.data._links.href)
 
-                    return Response.json
-
-                })
                 .then(() => fetchCars())
                 .then(() => setOpen(true))
                 .catch(err => console.error(err))
